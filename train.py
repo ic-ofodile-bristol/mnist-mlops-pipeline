@@ -1,6 +1,7 @@
 import argparse
 from pathlib import Path
 
+import mlflow
 import torch
 from torch import nn, optim
 
@@ -13,6 +14,10 @@ from src.checkpoint import save_checkpoint, load_checkpoint
 
 def main(config_path: str, resume: bool = False) -> None:
     cfg = load_config(config_path)
+
+    mlflow.set_tracking_uri("sqlite:///mlflow.db")
+    mlflow.set_experiment("mnist")
+
     logger = setup_logging()
     logger.info(f"Loaded")
     set_seed(cfg["seed"])
@@ -32,28 +37,44 @@ def main(config_path: str, resume: bool = False) -> None:
         start_epoch = load_checkpoint(ckpt_path, model, optimizer) + 1
         #logger.info(start_epoch)
         logger.info(f"Resumed from checkpoint at epoch {start_epoch}")
-    try:
-        best_accuracy = 0.0
-        best_model_path = Path(cfg["model_path"]) 
-        for epoch in range(start_epoch, cfg["epochs"]):
-            loss = train_one_epoch(model, train_loader, criterion, optimizer, device)
-            accuracy = evaluate(model, test_loader, device)
-            logger.info(f"epoch={epoch+1} loss={loss:.4f} accuracy={accuracy:.4f}")
-            print(epoch)
-            save_checkpoint(ckpt_path, model, optimizer, epoch)
-            print(epoch)
-            if accuracy > best_accuracy:
-                best_model_path.parent.mkdir(parents=True, exist_ok=True)
-                torch.save(model.state_dict(), best_model_path)
-                logger.info("New best model (accuracy=%.4f) saved to %s", accuracy, best_model_path)
-            logger.info(f"Saved checkpoint to {ckpt_path} at epoch {epoch+1}")
-    except KeyboardInterrupt:
-        logger.warning("Training interrupted")
-        raise
+    
+    with mlflow.start_run():
+        mlflow.log_params({
+            "seed": cfg["seed"],
+            "batch_size": cfg["batch_size"],
+            "learning_rate": cfg["learning_rate"],
+            "epochs": cfg["epochs"],
+        })
+        try:
+            best_accuracy = 0.0
+            best_model_path = Path(cfg["model_path"]) 
+            for epoch in range(start_epoch, cfg["epochs"]):
+                loss = train_one_epoch(model, train_loader, criterion, optimizer, device)
+                accuracy = evaluate(model, test_loader, device)
+                logger.info(f"epoch={epoch+1} loss={loss:.4f} accuracy={accuracy:.4f}")
+                mlflow.log_metrics({
+                    "loss": loss,
+                    "accuracy": accuracy
+                }, step=epoch+1)
+                mlflow.log_artifact("artifacts/train.log")
+                if ckpt_path.exists():
+                    mlflow.log_artifact(str(ckpt_path))
+                print(epoch)
+                save_checkpoint(ckpt_path, model, optimizer, epoch)
+                if accuracy > best_accuracy:
+                    best_accuracy = accuracy
+                    best_model_path.parent.mkdir(parents=True, exist_ok=True)
+                    torch.save(model.state_dict(), best_model_path)  
+                    logger.info("New best model (accuracy=%.4f) saved to %s", accuracy, best_model_path)
+                logger.info(f"Saved checkpoint to {ckpt_path} at epoch {epoch+1}")
+            mlflow.pytorch.log_model(model, name = "best_model", input_example=torch.randn(1, 1, 28, 28).numpy(), registered_model_name="mnist_best_model")
+        except KeyboardInterrupt:
+            logger.warning("Training interrupted")
+            raise
 
-    except Exception:
-        logger.exception("Unexpected error occurred during training")
-        raise
+        except Exception:
+            logger.exception("Unexpected error occurred during training")
+            raise
     model_path = Path(cfg["model_path"])
     model_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(model.state_dict(), model_path)

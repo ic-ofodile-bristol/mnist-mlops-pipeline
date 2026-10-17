@@ -6,3 +6,8 @@ artifacts/
 .ipynb_checkpoints/
 .idea/
 .vscode/
+
+# MLflow local tracking and artifacts
+mlflow.db
+mlruns/
+mlartifacts/

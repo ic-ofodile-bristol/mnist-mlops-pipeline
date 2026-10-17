@@ -3,3 +3,4 @@ torchvision
 pyyaml
 pytest
 pillow
+mlflow
