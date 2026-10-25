@@ -9,9 +9,11 @@ import mlflow.pytorch
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from src.utils import setup_logging
+import os
 
 logger = setup_logging()
 
+MODEL_URI = os.getenv("MODEL_URI", "models:/mnist_best_model@champion")
 
 class PredictionResponse(BaseModel):
     prediction: int
@@ -24,9 +26,9 @@ ml_models={}
 async def lifespan(app: FastAPI):
     # Initialize resources here
     mlflow.set_tracking_uri("sqlite:///mlflow.db")
-    ml_models["mnist_best_model"] = mlflow.pytorch.load_model("models:/mnist_best_model@champion")
+    ml_models["mnist_best_model"] = mlflow.pytorch.load_model(MODEL_URI)
     ml_models["mnist_best_model"].eval()
-    logger.info("MNIST best model loaded and ready")
+    logger.info("Model loaded from %s", MODEL_URI)
     yield
     # Cleanup resources here
     ml_models.clear()

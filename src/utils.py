@@ -23,6 +23,7 @@ def setup_logging(log_dir: str = "artifacts") -> logging.Logger:
             logging.StreamHandler(),
             logging.FileHandler(Path(log_dir) / "train.log"),
         ],
+        force=True
     )
     return logging.getLogger("train")
 

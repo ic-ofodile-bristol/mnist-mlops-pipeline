@@ -1,0 +1,8 @@
+services:
+  api:
+    build: .
+    image: mnist-api:0.
+    ports:
+      - "8000:8000"
+    environment:
+      MODEL_URI: /app/model

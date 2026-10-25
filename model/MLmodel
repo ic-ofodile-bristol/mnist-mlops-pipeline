@@ -1,0 +1,35 @@
+artifact_path: file:///C:/Users/ija/Documents/student_repo/mlruns/1/models/m-176a8d26b3e642189d99c5ddd99ccaa1/artifacts
+flavors:
+  python_function:
+    config:
+      device: null
+    data: data
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pytorch
+    pickle_module_name: mlflow.pytorch.pickle_module
+    python_version: 3.12.2
+  pytorch:
+    code: null
+    model_data: data
+    pytorch_version: 2.14.1+cpu
+is_signature_from_type_hint: false
+mlflow_version: 3.17.0
+model_id: m-176a8d26b3e642189d99c5ddd99ccaa1
+model_size_bytes: 129274
+model_uuid: m-176a8d26b3e642189d99c5ddd99ccaa1
+prompts: null
+run_id: f396466efe5b49799239d2f813e2197d
+saved_input_example_info:
+  artifact_path: input_example.json
+  serving_input_path: serving_input_example.json
+  type: ndarray
+signature:
+  inputs: '[{"type": "tensor", "tensor-spec": {"dtype": "float32", "shape": [-1, 1,
+    28, 28]}}]'
+  outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "float32", "shape": [-1,
+    10]}}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2026-10-18 09:41:25.354780'
