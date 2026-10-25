@@ -4,3 +4,6 @@ pyyaml
 pytest
 pillow
 mlflow
+fastapi
+uvicorn
+python-multipart

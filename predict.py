@@ -1,25 +1,24 @@
 import argparse
-from pathlib import Path
 
+import mlflow
+import mlflow.pytorch
 import torch
 from PIL import Image
 from torchvision import transforms
 
-from src.config import load_config
-from src.model import SmallCNN
 from src.utils import get_device
 
 
-def predict(image_path: str, config_path: str) -> int:
-    cfg = load_config(config_path)
+def predict(image_path: str, alias: str = "champion") -> int:
+    mlflow.set_tracking_uri("sqlite:///mlflow.db")
     device = get_device()
 
-    model = SmallCNN().to(device)
-    model.load_state_dict(torch.load(cfg["model_path"], map_location=device))
+    model = mlflow.pytorch.load_model(f"models:/mnist_best_model@{alias}")
+    model.to(device)
     model.eval()
 
     image = Image.open(image_path).convert("L").resize((28, 28))
-    tensor = transforms.ToTensor()(image).unsqueeze(0).to(device)  # (1, 1, 28, 28)
+    tensor = transforms.ToTensor()(image).unsqueeze(0).to(device)
 
     with torch.no_grad():
         logits = model(tensor)
@@ -29,6 +28,6 @@ def predict(image_path: str, config_path: str) -> int:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--image", required=True)
-    parser.add_argument("--config", default="configs/train.yaml")
+    parser.add_argument("--alias", default="champion")
     args = parser.parse_args()
-    print(f"Predicted digit: {predict(args.image, args.config)}")
+    print(f"Predicted digit: {predict(args.image, args.alias)}")

@@ -67,7 +67,7 @@ def main(config_path: str, resume: bool = False) -> None:
                     torch.save(model.state_dict(), best_model_path)  
                     logger.info("New best model (accuracy=%.4f) saved to %s", accuracy, best_model_path)
                 logger.info(f"Saved checkpoint to {ckpt_path} at epoch {epoch+1}")
-            mlflow.pytorch.log_model(model, name = "best_model", input_example=torch.randn(1, 1, 28, 28).numpy(), registered_model_name="mnist_best_model")
+            mlflow.pytorch.log_model(model, name = "best_model", input_example=torch.randn(1, 1, 28, 28).numpy(), registered_model_name="mnist_best_model", serialization_format="pickle")
         except KeyboardInterrupt:
             logger.warning("Training interrupted")
             raise
