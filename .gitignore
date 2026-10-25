@@ -1,7 +1,7 @@
 __pycache__/
 *.pyc
 .venv/
-data/
+/data/
 artifacts/
 .ipynb_checkpoints/
 .idea/
